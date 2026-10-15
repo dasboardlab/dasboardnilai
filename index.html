@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Analisis Nilai ASAS SMK Negeri 1 Balikpapan</title>
+<!-- Library eksternal (butuh internet saat file dibuka). Data nilai TIDAK dikirim ke mana pun. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--navy:#0b2a5b;--blue:#3b82c4;--sky:#e6f1fb;--bg:#f3f5f9;--ok:#16a34a;--okbg:#dcfce7;--bad:#dc2626;--badbg:#fee2e2;--warn:#ea8a0c;--warnbg:#fff1d6;--tx:#1e293b;--mu:#64748b;--bd:#dde3ec}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',system-ui,Arial,sans-serif;background:var(--bg);color:var(--tx);font-size:14px}
+.app{display:flex;min-height:100vh}
+aside{width:236px;background:var(--navy);color:#fff;padding:16px 10px;position:sticky;top:0;height:100vh;overflow:auto;flex-shrink:0}
+aside h2{font-size:15px;margin:4px 8px 2px}aside small{display:block;margin:0 8px 14px;color:#a9c4e8;font-size:11px}
+aside a{display:block;padding:10px 12px;border-radius:8px;color:#d6e4f7;cursor:pointer;margin-bottom:2px}
+aside a:hover{background:#17407f}aside a.on{background:var(--blue);color:#fff;font-weight:600}
+main{flex:1;min-width:0;padding:18px 22px}
+header.top{background:linear-gradient(120deg,var(--navy),#1b4f9c);color:#fff;border-radius:14px;padding:18px 22px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center}
+header.top h1{margin:0;font-size:20px}header.top p{margin:3px 0 0;color:#cfe0f7;font-size:13px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button,.btn{border:0;border-radius:8px;padding:8px 13px;font-size:13px;cursor:pointer;background:var(--blue);color:#fff;font-weight:600}
+button.g{background:#fff;color:var(--navy)}button.o{background:var(--warn)}button:disabled{opacity:.5;cursor:not-allowed}
+.filters{display:flex;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:12px;margin:14px 0}
+.filters label{font-size:11px;color:var(--mu);display:flex;flex-direction:column;gap:3px}
+select,input[type=text],input[type=number],input[type=search]{padding:7px 9px;border:1px solid var(--bd);border-radius:7px;font-size:13px;background:#fff;max-width:200px}
+input[type=number]{width:74px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:13px;display:flex;gap:11px;align-items:center}
+.kpi i{font-style:normal;font-size:22px;background:var(--sky);width:42px;height:42px;border-radius:10px;display:grid;place-items:center}
+.kpi b{font-size:21px;display:block;color:var(--navy)}.kpi span{font-size:11px;color:var(--mu)}
+.kpi.ok i{background:var(--okbg)}.kpi.bad i{background:var(--badbg)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;margin-bottom:14px}
+.card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:15px;margin-bottom:14px;min-width:0}
+.grid .card{margin-bottom:0}.card h3{margin:0 0 10px;font-size:15px;color:var(--navy)}
+.ch{position:relative;height:290px}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}
+th{background:var(--sky);color:var(--navy);text-align:left;padding:8px;white-space:nowrap;position:sticky;top:0}
+th.s{cursor:pointer}td{padding:7px 8px;border-bottom:1px solid #eef1f6}
+tr.c{cursor:pointer}tr.c:hover{background:#f7faff}
+.t{background:var(--okbg);color:#166534;font-weight:600}.b{background:var(--badbg);color:#991b1b;font-weight:600}.w{background:var(--warnbg);color:#9a5b00}
+.pill{padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.note{background:var(--warnbg);border-left:4px solid var(--warn);padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:13px}
+.info{background:var(--sky);border-left:4px solid var(--blue);padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:13px}
+.pg{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.rec{padding:11px 13px;border-radius:9px;margin-bottom:8px;border-left:4px solid var(--blue);background:#f8fbff}
+.rec.r{border-color:var(--bad);background:#fff6f6}.rec.y{border-color:var(--warn);background:#fffaf0}.rec.g{border-color:var(--ok);background:#f4fdf7}
+.ph{display:none}.empty{text-align:center;padding:50px 10px;color:var(--mu)}
+@media(max-width:900px){.app{flex-direction:column}aside{width:100%;height:auto;position:static;display:flex;flex-wrap:nowrap;overflow-x:auto;padding:8px}aside h2,aside small{display:none}aside a{white-space:nowrap}main{padding:12px}}
+@page{size:A4 landscape;margin:11mm}
+@media print{aside,.btns,.filters,.pg,.noprint,header.top .btns{display:none!important}.app{display:block}main{padding:0}body{background:#fff;font-size:11px}
+.ph{display:block;border-bottom:3px solid var(--navy);margin-bottom:10px;padding-bottom:6px}.ph h1{margin:0;font-size:16px;color:var(--navy)}
+header.top{background:#fff;color:#000;padding:0}header.top h1,header.top p{color:#000}.card,.kpi{break-inside:avoid;border:1px solid #ccc}.ch{height:230px}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside id="nav"></aside>
+<main>
+ <div class="ph"><h1>SMK Negeri 1 Balikpapan — Laporan Analisis Nilai ASAS</h1><div id="phinfo"></div></div>
+ <header class="top">
+  <div><h1>Dashboard Analisis Nilai ASAS SMK Negeri 1 Balikpapan</h1>
+  <p>Analisis Hasil Asesmen Sumatif Akhir Semester Ganjil Tahun Pelajaran 2026/2027</p></div>
+  <div class="btns">
+   <button class="g" onclick="go('unggah')">📤 Unggah Excel</button>
+   <button class="g" onclick="exportXlsx()">📊 Ekspor Excel</button>
+   <button class="g" onclick="exportCsv()">📄 CSV Ringkasan</button>
+   <button class="g" onclick="window.print()">🖨️ Cetak</button>
+   <button class="g" onclick="go('ringkasan')">🏠 Dashboard</button>
+  </div>
+ </header>
+ <div id="libwarn" class="note" style="display:none;margin-top:12px">⚠️ Library SheetJS/Chart.js belum termuat. Aplikasi ini membutuhkan koneksi internet saat pertama dibuka (cdnjs.cloudflare.com). Periksa koneksi lalu muat ulang halaman.</div>
+ <div id="fbar"></div>
+ <div id="content"></div>
+</main>
+</div>
+<script>
+/* ============ KONFIGURASI MATA PELAJARAN & ALIAS KOLOM ============ */
+// Alias dinormalisasi (huruf kecil, tanpa spasi/tanda baca) agar deteksi kolom fleksibel.
+const SUBJ=[
+ {k:'agama',n:'Pendidikan Agama dan Budi Pekerti',s:'Agama',al:['agama','pendidikanagamadanbudipekerti','pabp','pai']},
+ {k:'pkn',n:'PKN',s:'PKN',al:['pkn','ppkn','pendidikankewarganegaraan','pancasila','pendidikanpancasila']},
+ {k:'pkwu',n:'PKWU',s:'PKWU',al:['pkwu','prakaryadankewirausahaan']},
+ {k:'mtk',n:'Matematika',s:'Matematika',al:['matematika','mtk','mat']},
+ {k:'bind',n:'Bahasa Indonesia',s:'B. Indonesia',al:['bahasaindonesia','bindonesia','bind','bhsindonesia']},
+ {k:'bing',n:'Bahasa Inggris',s:'B. Inggris',al:['bahasainggris','binggris','bing','bhsinggris']},
+ {k:'kk',n:'Konsentrasi Keahlian',s:'Konsentrasi Keahlian',al:['konsentrasikeahlian','kk','kompetensikeahlian']},
+ {k:'mapil',n:'Mapil',s:'Mapil',al:['mapil','matapelajaranpilihan','pilihan']}];
+const norm=s=>String(s==null?'':s).toLowerCase().replace(/[^a-z0-9]/g,'');
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $=s=>document.querySelector(s);
+const fmt=n=>n==null||isNaN(n)?'–':(Math.round(n*100)/100).toLocaleString('id-ID');
+const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+
+/* ============ STATE ============ */
+const S={wb:null,fname:'',sheet:'',all:[],issues:{invalid:0,zero:0,skipped:0},kktp:75,zero:false,view:'unggah',
+ f:{kelas:'',mapel:'',status:'',min:0,max:100,q:''},sort:{k:'nama',d:1},page:1,ps:25,sel:null,selK:'',charts:{},map:null,preview:null};
+const ok=v=>v!=null&&!(S.zero&&v===0); // nilai valid (0 dapat dianggap kosong atas pilihan pengguna)
+
+/* ============ NAVIGASI ============ */
+const MENU=[['ringkasan','🏫 Ringkasan Sekolah'],['kelas','👥 Analisis Per Kelas'],['mapel','📚 Per Mata Pelajaran'],['siswa','🎓 Analisis Per Siswa'],['tuntas','✅ Analisis Ketuntasan'],['daftar','📋 Daftar Nilai'],['rekom','💡 Rekomendasi'],['unggah','📤 Unggah Data'],['panduan','📖 Panduan']];
+function go(v){if(v!=='unggah'&&v!=='panduan'&&!S.all.length){v='unggah'}S.view=v;S.page=1;render()}
+function nav(){$('#nav').innerHTML='<h2>SMK Negeri 1 Balikpapan</h2><small>Dashboard ASAS Ganjil 2026/2027</small>'+MENU.map(m=>`<a class="${S.view===m[0]?'on':''}" onclick="go('${m[0]}')">${m[1]}</a>`).join('')}
+
+/* ============ IMPOR EXCEL ============ */
+function onFile(e){
+ const file=e.target.files[0];if(!file)return;
+ if(!/\.(xlsx|xls)$/i.test(file.name)){return msg('Format tidak didukung. Gunakan file .xlsx atau .xls.','w')}
+ if(typeof XLSX==='undefined'){return $('#libwarn').style.display='block'}
+ const r=new FileReader();
+ r.onload=ev=>{try{S.wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});S.fname=file.name;S.sheet=S.wb.SheetNames[0];loadPreview();render()}
+  catch(err){msg('File tidak dapat dibaca: '+err.message,'w')}};
+ r.onerror=()=>msg('Gagal membaca file.','w');r.readAsArrayBuffer(file)}
+function msg(t,c){const m=$('#umsg');if(m)m.innerHTML=`<div class="${c==='w'?'note':'info'}">${t}</div>`}
+// Mencari baris header (yang memuat kolom "nama") lalu memetakan kolom dengan alias.
+function loadPreview(){
+ const rows=XLSX.utils.sheet_to_json(S.wb.Sheets[S.sheet],{header:1,defval:null,raw:true});
+ let h=rows.findIndex((r,i)=>i<15&&r.some(c=>/^nama/.test(norm(c))));
+ S.preview={rows,h,map:null,missing:[]};
+ if(h<0){S.preview.err='Baris judul kolom (Nama Siswa) tidak ditemukan pada sheet ini.';return}
+ const hd=rows[h].map(norm),map={};
+ map.nama=hd.findIndex(c=>c==='namasiswa'||c==='nama');map.kelas=hd.findIndex(c=>c==='kelas'||c==='rombel');
+ SUBJ.forEach(s=>map[s.k]=hd.findIndex(c=>c&&s.al.includes(c)));
+ const miss=[];if(map.nama<0)miss.push('Nama Siswa');if(map.kelas<0)miss.push('Kelas');SUBJ.forEach(s=>{if(map[s.k]<0)miss.push(s.n)});
+ S.preview.map=map;S.preview.missing=miss;
+ if(miss.length)S.preview.err='Kolom tidak ditemukan: '+miss.join(', ')+'. Pastikan judul kolom sesuai panduan.'}
+function selSheet(v){S.sheet=v;loadPreview();render()}
+// Proses data: nilai asli TIDAK diubah; nilai non-angka / di luar 0–100 dikosongkan & dihitung sebagai "perlu diperiksa".
+function processData(){
+ const p=S.preview;if(!p||p.err)return;
+ const out=[];let inv=0,zero=0,skip=0;
+ for(let i=p.h+1;i<p.rows.length;i++){
+  const r=p.rows[i];const nama=String(r[p.map.nama]==null?'':r[p.map.nama]).trim(),kelas=String(r[p.map.kelas]==null?'':r[p.map.kelas]).trim();
+  if(!nama||!kelas||norm(nama)==='namasiswa'||norm(kelas)==='kelas'){if(r.some(c=>c!=null&&c!==''))skip++;continue}
+  const s={};
+  SUBJ.forEach(x=>{let v=r[p.map[x.k]];if(v==null||String(v).trim()===''){s[x.k]=null;return}
+   if(typeof v==='string')v=Number(v.replace(',','.').trim());
+   if(typeof v!=='number'||isNaN(v)||v<0||v>100){s[x.k]=null;inv++;return}
+   if(v===0)zero++;s[x.k]=v});
+  out.push({nama,kelas,s})}
+ if(!out.length)return msg('Tidak ada baris siswa valid yang terbaca.','w');
+ S.all=out;S.issues={invalid:inv,zero,skipped:skip};S.f={kelas:'',mapel:'',status:'',min:0,max:100,q:''};S.sel=null;S.selK='';
+ go('ringkasan')}
+
+/* ============ PERHITUNGAN ============ */
+const subs=()=>S.f.mapel?SUBJ.filter(x=>x.k===S.f.mapel):SUBJ;
+// Statistik per siswa: rata-rata nilai valid, jumlah mapel tuntas/belum, status keseluruhan.
+function rows(){
+ const sb=subs();
+ return S.all.map(st=>{const v=sb.map(x=>st.s[x.k]).filter(ok);const n=v.length,t=v.filter(a=>a>=S.kktp).length;
+  return{...st,n,avg:mean(v),nT:t,nB:n-t,st:!n?'-':(n-t?'Belum Tuntas':'Tuntas')}})
+ .filter(r=>(!S.f.kelas||r.kelas===S.f.kelas)&&(!S.f.status||r.st===S.f.status)&&(!S.f.q||r.nama.toLowerCase().includes(S.f.q.toLowerCase()))&&(r.avg==null||(r.avg>=S.f.min&&r.avg<=S.f.max)))}
+function agg(R){
+ const sb=subs();
+ const subj=sb.map(x=>{const v=R.map(r=>r.s[x.k]).filter(ok);const t=v.filter(a=>a>=S.kktp).length;
+  return{...x,nv:v.length,avg:mean(v),max:v.length?Math.max(...v):null,min:v.length?Math.min(...v):null,t,b:v.length-t,p:v.length?t/v.length*100:null}});
+ const all=R.flatMap(r=>sb.map(x=>r.s[x.k]).filter(ok));const val=R.filter(r=>r.n),tp=val.filter(r=>!r.nB).length;
+ return{subj,N:R.length,mean:mean(all),max:all.length?Math.max(...all):null,min:all.length?Math.min(...all):null,val:val.length,tp,bp:val.length-tp,
+  pct:val.length?tp/val.length*100:null,pctN:all.length?all.filter(a=>a>=S.kktp).length/all.length*100:null,nVals:all.length,nK:new Set(R.map(r=>r.kelas)).size}}
+// Rata-rata kelas = rata-rata dari rata-rata nilai valid siswa di kelas tersebut.
+function klass(R){const g={};R.forEach(r=>(g[r.kelas]=g[r.kelas]||[]).push(r));
+ return Object.keys(g).sort((a,b)=>a.localeCompare(b,'id',{numeric:true})).map(k=>{const L=g[k],a=agg(L);return{k,n:L.length,avg:mean(L.filter(r=>r.avg!=null).map(r=>r.avg)),pct:a.pct,pctN:a.pctN,tp:a.tp,bp:a.bp,subj:a.subj}})
+ .sort((x,y)=>0)}
+const rankK=C=>[...C].sort((a,b)=>(b.avg??-1)-(a.avg??-1)).map((c,i)=>({...c,rank:i+1}));
+const cls=v=>v==null?'w':v>=S.kktp?'t':'b';
+
+/* ============ GRAFIK ============ */
+function ch(id,type,labels,ds,opt={}){const el=document.getElementById(id);if(!el||typeof Chart==='undefined')return;
+ S.charts[id]=new Chart(el,{type,data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,...opt}})}
+const clr=v=>v==null?'#ea8a0c':v>=S.kktp?'#16a34a':'#dc2626';
+const barOpt=(max)=>({scales:{y:{beginAtZero:true,max}},plugins:{legend:{display:false}}});
+const PAL=['#0b2a5b','#3b82c4','#16a34a','#ea8a0c','#dc2626','#7c3aed','#0891b2','#64748b'];
+
+/* ============ FILTER GLOBAL ============ */
+function filterBar(){
+ if(['unggah','panduan'].includes(S.view)||!S.all.length){$('#fbar').innerHTML='';return}
+ const K=[...new Set(S.all.map(r=>r.kelas))].sort((a,b)=>a.localeCompare(b,'id',{numeric:true}));
+ $('#fbar').innerHTML=`<div class="filters">
+ <label>Kelas<select onchange="S.f.kelas=this.value;S.page=1;render()"><option value="">Semua kelas</option>${K.map(k=>`<option ${S.f.kelas===k?'selected':''}>${esc(k)}</option>`).join('')}</select></label>
+ <label>Mata pelajaran<select onchange="S.f.mapel=this.value;render()"><option value="">Semua</option>${SUBJ.map(s=>`<option value="${s.k}" ${S.f.mapel===s.k?'selected':''}>${s.n}</option>`).join('')}</select></label>
+ <label>Status<select onchange="S.f.status=this.value;S.page=1;render()"><option value="">Semua</option><option ${S.f.status==='Tuntas'?'selected':''}>Tuntas</option><option ${S.f.status==='Belum Tuntas'?'selected':''}>Belum Tuntas</option></select></label>
+ <label>Rata-rata siswa (min–maks)<span><input type="number" min="0" max="100" value="${S.f.min}" onchange="S.f.min=+this.value||0;render()"> – <input type="number" min="0" max="100" value="${S.f.max}" onchange="S.f.max=Math.min(100,+this.value||0);render()"></span></label>
+ <label>Cari nama siswa<input type="search" value="${esc(S.f.q)}" placeholder="Ketik nama…" oninput="S.f.q=this.value;S.page=1;clearTimeout(window._t);window._t=setTimeout(render,250)"></label>
+ <label>Batas ketuntasan (KKTP)<input type="number" min="0" max="100" value="${S.kktp}" onchange="S.kktp=Math.max(0,Math.min(100,+this.value||0));render()"></label>
+ <label>&nbsp;<button class="o" onclick="S.f={kelas:'',mapel:'',status:'',min:0,max:100,q:''};S.page=1;render()">↺ Reset filter</button></label></div>`}
+function scope(R){const f=S.f,p=[];if(f.kelas)p.push('Kelas: '+f.kelas);if(f.mapel)p.push('Mapel: '+SUBJ.find(s=>s.k===f.mapel).n);if(f.status)p.push('Status: '+f.status);if(f.min>0||f.max<100)p.push(`Rata-rata ${f.min}–${f.max}`);if(f.q)p.push('Cari: "'+f.q+'"');
+ return p.length?`DATA TERFILTER (${R.length} dari ${S.all.length} siswa) — ${p.join('; ')}`:`SELURUH DATA (${S.all.length} siswa), tanpa filter`}
+
+/* ============ KPI ============ */
+function kpis(a){const c=[['👨‍🎓',a.N,'Total siswa'],['🏫',a.nK,'Total kelas'],['📚',a.subj.length,'Jumlah mata pelajaran'],['📈',fmt(a.mean),'Rata-rata seluruh nilai'],['🏆',fmt(a.max),'Nilai tertinggi'],['⬇️',fmt(a.min),'Nilai terendah'],
+ ['✅',fmt(a.pct)+'%','Ketuntasan siswa (semua mapel tuntas)','ok'],['❌',a.bp,'Siswa belum tuntas','bad']];
+ return '<div class="kpis">'+c.map(x=>`<div class="kpi ${x[3]||''}"><i>${x[0]}</i><div><b>${x[1]}</b><span>${x[2]}</span></div></div>`).join('')+'</div>'+
+ `<div class="info">KKTP saat ini: <b>${S.kktp}</b>. Ketuntasan nilai (setiap nilai ≥ KKTP): <b>${fmt(a.pctN)}%</b> dari ${a.nVals} nilai valid. ${scope({length:a.N})}</div>`+
+ (S.issues.invalid||S.issues.zero?`<div class="note">⚠️ Data perlu diperiksa: ${S.issues.invalid} sel diabaikan (bukan angka / di luar 0–100); ${S.issues.zero} nilai bernilai 0 ${S.zero?'(dianggap kosong sesuai pilihan Anda)':'(tetap dihitung sebagai nilai valid — ubah di menu Unggah Data bila 0 berarti belum ada nilai)'}.</div>`:'')}
+function table(h,body){return `<div class="tw"><table><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div>`}
+const stPill=s=>`<span class="pill ${s==='Tuntas'?'t':s==='-'?'w':'b'}">${s}</span>`;
+
+/* ============ VIEWS ============ */
+const V={};
+V.unggah=()=>{const p=S.preview;let pv='';
+ if(p){pv=`<div class="info">File: <b>${esc(S.fname)}</b></div><label>Pilih sheet: <select onchange="selSheet(this.value)">${S.wb.SheetNames.map(n=>`<option ${n===S.sheet?'selected':''}>${esc(n)}</option>`).join('')}</select></label>`;
+  if(p.err)pv+=`<div class="note" style="margin-top:10px">❌ ${p.err}<br>Kolom yang dibutuhkan: Nama Siswa, Kelas, Bahasa Indonesia, PKWU, Matematika, PKN, Bahasa Inggris, Pendidikan Agama, Mapil, Konsentrasi Keahlian (singkatan seperti AGAMA, PPKN, B. INDONESIA, KK diterima).</div>`;
+  else{const m=p.map,n=p.rows.slice(p.h+1).filter(r=>r[m.nama]&&r[m.kelas]);const kl=new Set(n.map(r=>r[m.kelas]));
+   pv+=`<div class="info" style="margin-top:10px">✅ Kolom terdeteksi. Baris siswa terbaca: <b>${n.length}</b> · Jumlah kelas: <b>${kl.size}</b> · Mata pelajaran: <b>${SUBJ.length}</b></div>
+   <h3>Pratinjau 8 baris pertama (data asli, belum diubah)</h3>${table(['Nama','Kelas',...SUBJ.map(s=>s.s)],n.slice(0,8).map(r=>`<tr><td>${esc(r[m.nama])}</td><td>${esc(r[m.kelas])}</td>${SUBJ.map(s=>`<td>${esc(r[m[s.k]])}</td>`).join('')}</tr>`).join(''))}
+   <p><label><input type="checkbox" ${S.zero?'checked':''} onchange="S.zero=this.checked"> Anggap nilai <b>0</b> sebagai "belum ada nilai" (tidak dihitung). Biarkan kosong jika 0 adalah nilai sebenarnya.</label></p>
+   <button onclick="processData()">▶ Setujui &amp; Proses Data</button>`}}
+ return `<div class="card"><h3>Unggah File Excel Nilai ASAS</h3><p>Data dibaca dan diproses <b>di browser Anda saja</b>; tidak ada data yang dikirim ke server.</p>
+ <input type="file" accept=".xlsx,.xls" onchange="onFile(event)"><div id="umsg" style="margin-top:10px"></div><div style="margin-top:12px">${pv}</div></div>`};
+
+V.ringkasan=(R,a)=>{
+ const best=[...a.subj].filter(s=>s.avg!=null).sort((x,y)=>y.avg-x.avg);
+ return kpis(a)+`<div class="grid"><div class="card"><h3>Rata-rata Nilai per Mata Pelajaran</h3><div class="ch"><canvas id="c1"></canvas></div></div>
+ <div class="card"><h3>Distribusi Kategori Nilai</h3><div class="ch"><canvas id="c4"></canvas></div></div></div>
+ <div class="card"><h3>Mata Pelajaran Terbaik &amp; Terendah</h3>${best.length?`<p>🥇 Rata-rata tertinggi: <b>${best[0].n}</b> (${fmt(best[0].avg)}) · 🔻 Terendah: <b>${best.at(-1).n}</b> (${fmt(best.at(-1).avg)})</p>`:'Belum ada data.'}</div>`};
+V.ringkasan.after=(R,a)=>{ch('c1','bar',a.subj.map(s=>s.s),[{data:a.subj.map(s=>+fmt(s.avg).replace(',','.')),backgroundColor:a.subj.map(s=>clr(s.avg))}],barOpt(100));
+ const all=R.flatMap(r=>subs().map(x=>r.s[x.k]).filter(ok)),bins=[0,0,0,0,0];all.forEach(v=>bins[v<60?0:v<70?1:v<80?2:v<90?3:4]++);
+ ch('c4','doughnut',['< 60','60–69','70–79','80–89','90–100'],[{data:bins,backgroundColor:['#dc2626','#ea8a0c','#facc15','#3b82c4','#16a34a']}])};
+
+V.kelas=(R,a)=>{const C=rankK(klass(R));const sk=C.find(c=>c.k===S.selK);
+ return kpis(a)+`<div class="card"><h3>Peringkat Kelas Berdasarkan Rata-rata Nilai</h3><p class="noprint" style="color:var(--mu);margin:0 0 8px">Klik baris untuk melihat rincian kelas.</p>
+ ${table(['Peringkat','Kelas','Jumlah Siswa','Rata-rata Kelas','Siswa Tuntas Penuh','% Ketuntasan Siswa','% Nilai ≥ KKTP'],C.map(c=>`<tr class="c" onclick="S.selK='${esc(c.k)}';render()" ${c.k===S.selK?'style="background:#eaf3fc"':''}><td>${c.rank}</td><td><b>${esc(c.k)}</b></td><td>${c.n}</td><td class="${cls(c.avg)}">${fmt(c.avg)}</td><td>${c.tp}</td><td>${fmt(c.pct)}%</td><td>${fmt(c.pctN)}%</td></tr>`).join(''))}</div>
+ <div class="grid"><div class="card"><h3>Rata-rata Nilai per Kelas</h3><div class="ch"><canvas id="c3"></canvas></div></div>
+ <div class="card"><h3>Perbandingan Hasil Antarkelas (per mapel)</h3><div class="ch"><canvas id="c5"></canvas></div></div></div>
+ ${sk?`<div class="card"><h3>Rincian Kelas ${esc(sk.k)}</h3>${table(['Mata Pelajaran','Rata-rata','Tertinggi','Terendah','Tuntas','Belum','% Tuntas'],sk.subj.map(s=>`<tr><td>${s.n}</td><td class="${cls(s.avg)}">${fmt(s.avg)}</td><td>${fmt(s.max)}</td><td>${fmt(s.min)}</td><td>${s.t}</td><td>${s.b}</td><td>${fmt(s.p)}%</td></tr>`).join(''))}</div>`:''}`};
+V.kelas.after=(R)=>{const C=rankK(klass(R));
+ ch('c3','bar',C.map(c=>c.k),[{data:C.map(c=>c.avg==null?0:+c.avg.toFixed(2)),backgroundColor:C.map(c=>clr(c.avg))}],barOpt(100));
+ const K=klass(R);ch('c5','bar',K.map(c=>c.k),subs().map((s,i)=>({label:s.s,backgroundColor:PAL[i],data:K.map(c=>{const x=c.subj.find(y=>y.k===s.k);return x.avg==null?0:+x.avg.toFixed(2)})})),{scales:{y:{beginAtZero:true,max:100}}})};
+
+V.mapel=(R,a)=>kpis(a)+`<div class="card"><h3>Statistik per Mata Pelajaran (KKTP ${S.kktp})</h3>${table(['Mata Pelajaran','Nilai Valid','Rata-rata','Tertinggi','Terendah','Tuntas','Belum Tuntas','% Ketuntasan'],a.subj.map(s=>`<tr><td><b>${s.n}</b></td><td>${s.nv}</td><td class="${cls(s.avg)}">${fmt(s.avg)}</td><td>${fmt(s.max)}</td><td>${fmt(s.min)}</td><td>${s.t}</td><td>${s.b}</td><td>${fmt(s.p)}%</td></tr>`).join(''))}</div>
+ <div class="card"><h3>Perbandingan Rata-rata Mata Pelajaran</h3><div class="ch"><canvas id="c1"></canvas></div></div>`;
+V.mapel.after=V.ringkasan.after;
+
+V.siswa=(R,a)=>{const L=sorted(R);const s=S.sel&&R.find(r=>r.nama===S.sel.nama&&r.kelas===S.sel.kelas);
+ const rows=L.slice(0,300);
+ return kpis(a)+`<div class="card"><h3>Analisis Per Siswa</h3><div class="info noprint">Klik nama siswa untuk melihat rincian &amp; grafik radar. Urutan di bawah hanya untuk membantu analisis, <b>bukan peringkat resmi</b>. ${R.length>300?'Menampilkan 300 siswa pertama; gunakan filter/pencarian untuk mempersempit.':''}
+ <br>Urutkan: <select onchange="S.sort={k:'avg',d:+this.value};render()"><option value="1" ${S.sort.k==='avg'&&S.sort.d===1?'selected':''}>Nilai terendah → tertinggi</option><option value="-1" ${S.sort.k==='avg'&&S.sort.d===-1?'selected':''}>Nilai tertinggi → terendah</option></select> <button class="g" onclick="S.sort={k:'nama',d:1};render()">Urut nama</button></div>
+ ${table(['Nama','Kelas',...subs().map(x=>x.s),'Rata-rata','Jml Nilai','Tuntas','Belum','Status'],rows.map(r=>`<tr class="c" onclick="S.sel={nama:'${esc(r.nama).replace(/'/g,"\\'")}',kelas:'${esc(r.kelas)}'};render();window.scrollTo(0,document.body.scrollHeight)"><td>${esc(r.nama)}</td><td>${esc(r.kelas)}</td>${subs().map(x=>sc(r.s[x.k])).join('')}<td class="${cls(r.avg)}">${fmt(r.avg)}</td><td>${r.n}</td><td>${r.nT}</td><td>${r.nB}</td><td>${stPill(r.st)}</td></tr>`).join(''))}</div>
+ ${s?`<div class="grid"><div class="card"><h3>${esc(s.nama)} — ${esc(s.kelas)}</h3><div class="ch"><canvas id="c6"></canvas></div></div><div class="card"><h3>Mata Pelajaran yang Perlu Ditingkatkan</h3>${(()=>{const need=SUBJ.filter(x=>s.s[x.k]!=null&&s.s[x.k]<S.kktp).sort((x,y)=>s.s[x.k]-s.s[y.k]);return need.length?need.map(x=>`<div class="rec r"><b>${x.n}</b>: ${fmt(s.s[x.k])} (kurang ${fmt(S.kktp-s.s[x.k])} dari KKTP)</div>`).join(''):'<div class="rec g">Seluruh nilai valid sudah mencapai KKTP.</div>'})()}<p>Rata-rata: <b>${fmt(s.avg)}</b> dari ${s.n} mapel.</p></div></div>`:''}`};
+V.siswa.after=()=>{const s=S.sel&&S.all.find(r=>r.nama===S.sel.nama&&r.kelas===S.sel.kelas);if(!s)return;
+ ch('c6','radar',SUBJ.map(x=>x.s),[{label:'Nilai siswa',data:SUBJ.map(x=>s.s[x.k]),backgroundColor:'rgba(59,130,196,.25)',borderColor:'#0b2a5b'},{label:'KKTP',data:SUBJ.map(()=>S.kktp),borderColor:'#dc2626',borderDash:[5,5],pointRadius:0,fill:false}],{scales:{r:{min:0,max:100}}})};
+const sc=v=>v==null?'<td class="w">–</td>':`<td class="${v>=S.kktp?'t':'b'}">${fmt(v)}</td>`;
+function sorted(R){const {k,d}=S.sort;return [...R].sort((a,b)=>{let x,y;if(k==='nama'||k==='kelas'){return d*String(a[k]).localeCompare(b[k],'id',{numeric:true})}
+ x=k==='avg'?a.avg:a.s[k];y=k==='avg'?b.avg:b.s[k];return d*((x??-1)-(y??-1))})}
+
+V.tuntas=(R,a)=>{const C=klass(R),need=R.filter(r=>r.nB>0).sort((x,y)=>y.nB-x.nB||x.avg-y.avg),low=[...a.subj].filter(s=>s.p!=null).sort((x,y)=>x.p-y.p);
+ return kpis(a)+`<div class="grid"><div class="card"><h3>Ketuntasan per Mata Pelajaran (%)</h3><div class="ch"><canvas id="c2"></canvas></div></div><div class="card"><h3>Ketuntasan per Kelas (% siswa tuntas penuh)</h3><div class="ch"><canvas id="c7"></canvas></div></div></div>
+ <div class="info">Rumus: Persentase ketuntasan = (jumlah siswa tuntas ÷ jumlah siswa dengan nilai valid) × 100%. Siswa dinyatakan tuntas keseluruhan bila semua nilai validnya ≥ KKTP (${S.kktp}). Ubah KKTP pada kolom "Batas ketuntasan" di bar filter.</div>
+ <div class="grid"><div class="card"><h3>Mata Pelajaran dengan Ketuntasan Terendah</h3>${table(['#','Mata Pelajaran','% Tuntas','Belum Tuntas'],low.slice(0,5).map((s,i)=>`<tr><td>${i+1}</td><td>${s.n}</td><td class="${s.p>=75?'t':'b'}">${fmt(s.p)}%</td><td>${s.b}</td></tr>`).join(''))}</div>
+ <div class="card"><h3>Ketuntasan per Kelas</h3>${table(['Kelas','Tuntas Penuh','Belum','% Siswa','% Nilai'],C.map(c=>`<tr><td>${esc(c.k)}</td><td>${c.tp}</td><td>${c.bp}</td><td>${fmt(c.pct)}%</td><td>${fmt(c.pctN)}%</td></tr>`).join(''))}</div></div>
+ <div class="card"><h3>Siswa yang Memerlukan Tindak Lanjut (${need.length} siswa${need.length>100?', 100 teratas':''})</h3>${table(['Nama','Kelas','Rata-rata','Mapel Belum Tuntas'],need.slice(0,100).map(r=>`<tr><td>${esc(r.nama)}</td><td>${esc(r.kelas)}</td><td>${fmt(r.avg)}</td><td>${r.nB}: ${subs().filter(x=>ok(r.s[x.k])&&r.s[x.k]<S.kktp).map(x=>x.s).join(', ')}</td></tr>`).join(''))}</div>`};
+V.tuntas.after=(R,a)=>{const C=klass(R);
+ ch('c2','bar',a.subj.map(s=>s.s),[{data:a.subj.map(s=>s.p==null?0:+s.p.toFixed(1)),backgroundColor:a.subj.map(s=>s.p>=75?'#16a34a':'#dc2626')}],barOpt(100));
+ ch('c7','bar',C.map(c=>c.k),[{label:'% siswa tuntas penuh',data:C.map(c=>+(c.pct||0).toFixed(1)),backgroundColor:'#16a34a'},{label:'% nilai ≥ KKTP',data:C.map(c=>+(c.pctN||0).toFixed(1)),backgroundColor:'#3b82c4'}],{scales:{y:{beginAtZero:true,max:100}}})};
+
+V.daftar=(R,a)=>{const L=sorted(R),tot=Math.max(1,Math.ceil(L.length/S.ps));S.page=Math.min(S.page,tot);const pg=L.slice((S.page-1)*S.ps,S.page*S.ps);
+ const th=(k,t)=>`<th class="s" onclick="S.sort={k:'${k}',d:S.sort.k==='${k}'?-S.sort.d:1};render()">${t}${S.sort.k===k?(S.sort.d>0?' ▲':' ▼'):''}</th>`;
+ return kpis(a)+`<div class="card"><h3>Daftar Nilai (${L.length} siswa)</h3><div class="tw"><table><thead><tr><th>No</th>${th('nama','Nama')}${th('kelas','Kelas')}${subs().map(x=>th(x.k,x.s)).join('')}${th('avg','Rata-rata')}</tr></thead><tbody>${pg.map((r,i)=>`<tr><td>${(S.page-1)*S.ps+i+1}</td><td>${esc(r.nama)}</td><td>${esc(r.kelas)}</td>${subs().map(x=>sc(r.s[x.k])).join('')}<td class="${cls(r.avg)}">${fmt(r.avg)}</td></tr>`).join('')}</tbody></table></div>
+ <div class="pg"><button class="g" ${S.page<=1?'disabled':''} onclick="S.page--;render()">◀</button> Halaman ${S.page} / ${tot} <button class="g" ${S.page>=tot?'disabled':''} onclick="S.page++;render()">▶</button> Baris: <select onchange="S.ps=+this.value;S.page=1;render()">${[10,25,50,100,500].map(n=>`<option ${n===S.ps?'selected':''}>${n}</option>`).join('')}</select>
+ <span style="color:var(--mu)">Hijau = ≥ KKTP · Merah = &lt; KKTP · Oranye "–" = kosong/perlu diperiksa</span></div></div>`};
+
+V.rekom=(R,a)=>{const out=[],C=klass(R),low=[...a.subj].filter(s=>s.avg!=null).sort((x,y)=>x.avg-y.avg),lp=[...a.subj].filter(s=>s.p!=null).sort((x,y)=>x.p-y.p);
+ if(!R.length)return '<div class="empty">Tidak ada data pada filter ini.</div>';
+ if(low[0])out.push(['r',`Mata pelajaran dengan rata-rata terendah: <b>${low[0].n}</b> (${fmt(low[0].avg)}); hanya ${fmt(low[0].p)}% nilai mencapai KKTP ${S.kktp}. Perlu analisis lanjutan (kesesuaian soal, capaian materi, pembelajaran) sebelum pengambilan keputusan.`]);
+ if(low[1])out.push(['y',`Mata pelajaran terendah berikutnya: <b>${low[1].n}</b> (${fmt(low[1].avg)}) dan <b>${low[2]?low[2].n:'-'}</b>${low[2]?' ('+fmt(low[2].avg)+')':''}.`]);
+ const kl=[...C].filter(c=>c.pctN!=null).sort((x,y)=>x.pctN-y.pctN).slice(0,3);if(kl.length&&C.length>1)out.push(['r',`Kelas dengan persentase nilai tuntas terendah: ${kl.map(c=>`<b>${esc(c.k)}</b> (${fmt(c.pctN)}%, rata-rata ${fmt(c.avg)})`).join('; ')}. Perlu perhatian dan pendampingan.`]);
+ const half=R.filter(r=>r.n&&r.nB>=r.n/2).length;if(a.bp)out.push(['y',`<b>${a.bp}</b> dari ${a.val} siswa belum tuntas pada minimal satu mata pelajaran; <b>${half}</b> siswa belum tuntas pada separuh atau lebih mapel. Pertimbangkan remedial terjadwal (lihat daftar di menu Analisis Ketuntasan).`]);
+ else out.push(['g','Semua siswa valid pada filter ini tuntas.']);
+ const zr=R.filter(r=>subs().some(x=>r.s[x.k]===0)).length;if(zr)out.push(['y',`Terdapat <b>${zr}</b> siswa dengan nilai 0 pada mapel aktif. Periksa apakah itu nilai sebenarnya atau data belum diisi, lalu atur di menu Unggah Data.`]);
+ if(S.issues.invalid)out.push(['y',`<b>${S.issues.invalid}</b> sel nilai tidak terbaca (bukan angka / di luar 0–100) dan tidak dihitung. Periksa file sumber.`]);
+ out.push(['',`Seluruh rekomendasi dihitung dari data aktual dengan KKTP ${S.kktp}. Rekomendasi bersifat bantuan analisis, keputusan akhir tetap pada sekolah.`]);
+ return kpis(a)+'<div class="card"><h3>Rekomendasi Tindak Lanjut Otomatis</h3>'+out.map(o=>`<div class="rec ${o[0]}">${o[1]}</div>`).join('')+'</div>'};
+
+V.panduan=()=>`<div class="card"><h3>Panduan Penggunaan</h3><ol style="line-height:1.8">
+<li><b>Unggah Excel:</b> menu <i>Unggah Data</i> → pilih file .xlsx/.xls → pilih sheet → periksa pratinjau → centang opsi "0 = kosong" bila perlu → <i>Setujui &amp; Proses Data</i>.</li>
+<li><b>Kolom yang dibutuhkan:</b> Nama Siswa, Kelas, dan 8 nilai mapel (Agama/PABP, PKN/PPKN, PKWU, Matematika, B. Indonesia, B. Inggris, KK/Konsentrasi Keahlian, Mapil). Huruf besar/kecil, spasi, dan titik diabaikan. Kolom lain (No, Total, Rata-Rata) diabaikan; semua dihitung ulang.</li>
+<li><b>Mengatur KKTP:</b> ubah kolom "Batas ketuntasan (KKTP)" di bar filter (default 75, hanya nilai awal — sesuaikan ketetapan sekolah). Semua kartu, grafik, dan tabel ikut berubah.</li>
+<li><b>Filter:</b> kelas, mata pelajaran, status, rentang rata-rata siswa, dan pencarian nama berlaku di semua menu. Tombol <i>Reset filter</i> mengembalikan semuanya.</li>
+<li><b>Membaca grafik:</b> hijau = rata-rata/ketuntasan memenuhi KKTP/75%, merah = di bawahnya. Radar siswa membandingkan nilai dengan garis KKTP.</li>
+<li><b>Ekspor:</b> <i>Ekspor Excel</i> memuat sheet Info, Per Kelas, Per Mapel, Detail Siswa sesuai <b>filter aktif</b> (cantumannya tertulis di sheet Info). <i>CSV Ringkasan</i> berisi ringkasan per mapel dan kelas terfilter.</li>
+<li><b>Cetak:</b> tombol <i>Cetak</i> (A4 lanskap) menampilkan kop sekolah, tanggal, dan ringkasan; pilih "Simpan sebagai PDF" bila perlu.</li></ol>
+<h3>Metode Perhitungan</h3><ul style="line-height:1.8"><li>Rata-rata mapel = jumlah nilai valid ÷ banyak nilai valid. Nilai kosong/non-angka tidak dihitung.</li><li>Rata-rata siswa = rata-rata nilai valid siswa tersebut (jumlah mapel bernilai ditampilkan).</li><li>Rata-rata kelas = rata-rata dari rata-rata siswa di kelas.</li><li>Ketuntasan mapel = siswa dengan nilai ≥ KKTP ÷ siswa bernilai valid × 100%. Siswa tuntas keseluruhan = semua nilai valid ≥ KKTP.</li></ul>
+<h3>Keamanan Data</h3><p>Pengolahan dilakukan lokal di browser; tidak ada unggahan ke server dan tidak ada penyimpanan permanen (data hilang saat halaman ditutup). Internet hanya dibutuhkan untuk memuat library SheetJS dan Chart.js.</p></div>`;
+
+/* ============ EKSPOR ============ */
+function sheets(){const R=rows(),a=agg(R),C=rankK(klass(R));
+ return{R,a,info:[['Laporan Analisis Nilai ASAS — SMK Negeri 1 Balikpapan'],['Semester Ganjil 2026/2027'],['Tanggal laporan',new Date().toLocaleDateString('id-ID')],['Cakupan ekspor',scope(R)],['KKTP',S.kktp],['Total siswa',a.N],['Rata-rata seluruh nilai',+fmt(a.mean).replace(',','.')]],
+ kelas:[['Peringkat','Kelas','Jumlah Siswa','Rata-rata Kelas','Siswa Tuntas Penuh','Siswa Belum Tuntas','% Ketuntasan Siswa','% Nilai ≥ KKTP'],...C.map(c=>[c.rank,c.k,c.n,c.avg,c.tp,c.bp,c.pct,c.pctN])],
+ mapel:[['Mata Pelajaran','Nilai Valid','Rata-rata','Tertinggi','Terendah','Tuntas','Belum Tuntas','% Ketuntasan'],...a.subj.map(s=>[s.n,s.nv,s.avg,s.max,s.min,s.t,s.b,s.p])],
+ siswa:[['Nama','Kelas',...subs().map(x=>x.n),'Rata-rata','Jumlah Mapel Bernilai','Tuntas','Belum Tuntas','Status'],...R.map(r=>[r.nama,r.kelas,...subs().map(x=>r.s[x.k]),r.avg,r.n,r.nT,r.nB,r.st])]}}
+function exportXlsx(){if(!S.all.length)return alert('Unggah data terlebih dahulu.');const d=sheets(),wb=XLSX.utils.book_new();
+ [['Info',d.info],['Per Kelas',d.kelas],['Per Mapel',d.mapel],['Detail Siswa',d.siswa]].forEach(([n,x])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(x),n));
+ XLSX.writeFile(wb,'Laporan_ASAS_SMKN1_Balikpapan_'+new Date().toISOString().slice(0,10)+'.xlsx');
+ alert('Ekspor Excel selesai.\nIsi: '+scope(d.R))}
+function exportCsv(){if(!S.all.length)return alert('Unggah data terlebih dahulu.');const d=sheets();
+ const csv=XLSX.utils.sheet_to_csv(XLSX.utils.aoa_to_sheet([[d.info[3][1]],[],['RINGKASAN PER MAPEL'],...d.mapel,[],['RINGKASAN PER KELAS'],...d.kelas]));
+ const u=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv'})),l=document.createElement('a');l.href=u;l.download='Ringkasan_ASAS_SMKN1_Balikpapan.csv';l.click();
+ alert('CSV berisi ringkasan mapel & kelas.\nCakupan: '+scope(d.R))}
+
+/* ============ RENDER UTAMA ============ */
+function render(){
+ Object.values(S.charts).forEach(c=>c.destroy());S.charts={};nav();filterBar();
+ const c=$('#content');
+ if(S.view==='unggah'||S.view==='panduan'){c.innerHTML=V[S.view]();return}
+ const R=rows(),a=agg(R);
+ $('#phinfo').innerHTML=`Tanggal laporan: ${new Date().toLocaleDateString('id-ID',{dateStyle:'long'})} · KKTP ${S.kktp} · ${scope(R)}`;
+ if(!R.length&&S.view!=='rekom'){c.innerHTML='<div class="empty">Tidak ada data yang cocok dengan filter. Klik "Reset filter".</div>';return}
+ c.innerHTML=V[S.view](R,a);if(V[S.view].after)V[S.view].after(R,a)}
+window.addEventListener('load',()=>{if(typeof XLSX==='undefined'||typeof Chart==='undefined')$('#libwarn').style.display='block'});
+render();
+</script>
+</body>
+</html>
